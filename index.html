@@ -102,43 +102,6 @@
     border-radius:12px;
     cursor:pointer;
   }
-  .source-panel{
-    margin-top:12px;
-    padding:10px 12px;
-    background:var(--panel-2);
-    border-radius:10px;
-    border:1px dashed rgba(244,241,232,0.25);
-    font-size:11px;
-    color:var(--muted);
-  }
-  .source-panel.auto{border-style:solid;border-color:rgba(111,207,151,0.4);}
-  .source-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:6px;}
-  .source-row input{
-    flex:1;
-    min-width:180px;
-    background:var(--bg);
-    border:1px solid rgba(244,241,232,0.2);
-    color:var(--cream);
-    border-radius:6px;
-    padding:5px 8px;
-    font-size:11px;
-  }
-  .source-row button{
-    background:var(--gold);
-    color:#1B2E1F;
-    border:none;
-    font-weight:800;
-    font-size:11px;
-    padding:5px 10px;
-    border-radius:6px;
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  .source-row button.ghost{
-    background:transparent;
-    color:var(--muted);
-    border:1px solid rgba(244,241,232,0.25);
-  }
   .valinput[readonly]{opacity:0.75;cursor:not-allowed;}
 
   /* Thermometer */
@@ -205,12 +168,17 @@
     margin-top:4px;
   }
 
+  #lanes{
+    display:flex;
+    flex-direction:column;
+  }
   .lane{
     background:var(--panel);
     border:1px solid rgba(244,241,232,0.12);
     border-radius:14px;
     padding:12px 14px 14px;
     margin-bottom:12px;
+    transition:order .3s ease;
   }
   .lane-top{
     display:flex;
@@ -219,7 +187,7 @@
     margin-bottom:8px;
     gap:10px;
   }
-  .name-wrap{display:flex;align-items:center;gap:8px;min-width:0;}
+  .name-wrap{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;}
   .medal{font-size:18px;width:22px;text-align:center;flex-shrink:0;}
   .name{
     font-weight:800;
@@ -244,6 +212,17 @@
     display:none;
   }
   .streak-badge.show{display:inline-block;}
+  .neg-badge{
+    font-size:10px;
+    font-weight:700;
+    color:var(--sky);
+    background:rgba(78,161,211,0.16);
+    border-radius:10px;
+    padding:2px 7px;
+    white-space:nowrap;
+    display:none;
+  }
+  .neg-badge.show{display:inline-block;}
   .stats{
     display:flex;
     align-items:center;
@@ -418,20 +397,12 @@
       <span id="syncText">verificando sincronização…</span>
       <button class="sync-btn" id="syncNowBtn">🔄 Atualizar agora</button>
     </div>
-    <div class="source-panel" id="sourcePanel">
-      <div id="sourceStatus">📋 Modo manual — cada um digita o próprio valor aqui no placar.</div>
-      <div class="source-row">
-        <input type="text" id="csvUrlInput" placeholder="Cole aqui o link CSV publicado da aba 'Ranking do Dia' (opcional)">
-        <button id="saveSourceBtn">Ativar fonte automática</button>
-        <button class="ghost" id="clearSourceBtn">Voltar ao manual</button>
-      </div>
-    </div>
   </div>
 
   <div class="thermo-card">
     <div class="thermo-top">
       <span class="thermo-label">🌡️ Termômetro da Equipe</span>
-      <span class="thermo-values" id="thermoValues"><b>R$ 0</b> de R$ 15.384</span>
+      <span class="thermo-values" id="thermoValues"><b>R$ 0</b> de R$ 13.461</span>
     </div>
     <div class="thermo-track">
       <div class="thermo-fill" id="thermoFill" style="width:0%;"></div>
@@ -440,8 +411,8 @@
   </div>
 
   <div class="summary">
-    <div class="metric"><div class="num" id="sumBatidos">0/8</div><div class="lbl">bateram a meta</div></div>
-    <div class="metric"><div class="num" id="sumTotal">R$ 0</div><div class="lbl">recebido pela equipe</div></div>
+    <div class="metric"><div class="num" id="sumBatidos">0/7</div><div class="lbl">bateram a meta</div></div>
+    <div class="metric"><div class="num" id="sumTotal">R$ 0</div><div class="lbl">negociado pela equipe</div></div>
     <div class="metric"><div class="num" id="sumPct">0%</div><div class="lbl">da meta da equipe</div></div>
   </div>
 
@@ -458,12 +429,19 @@
     <button class="btn secondary" id="downloadImgBtn">📷 Baixar como imagem</button>
     <button class="btn secondary" onclick="window.print()">🖨️ Imprimir</button>
   </div>
-  <div class="hint">Modo manual: cada colaborador abre este link e digita o próprio valor (sincroniza a cada 20s). Modo automático: publique a aba "Ranking do Dia" da planilha e cole o link CSV no campo acima — o placar passa a se atualizar sozinho, sem digitar duas vezes. Sem login: use só dentro do time.</div>
+  <div class="hint">O placar atualiza sozinho a partir da planilha a cada 20s. Clique em "🔄 Atualizar agora" pra forçar uma leitura na hora. Sem login: use só dentro do time.</div>
 
 </div>
 
 <script>
-const nomes = ["Alexandre","Kalissa","Maria","Nayara","Yara","Ivoneide","Colaborador A","Colaborador B"];
+const nomes = ["Alexandre","Kalissa","Maria","Nayara","Yara","Ivoneide","Joao Pedro"];
+
+// ---- CONFIGURAÇÃO DO ADMIN (só quem edita este arquivo mexe aqui) ----
+// Cole aqui o link CSV publicado da aba "Resumo por Operador" do Painel Central.
+// Os colaboradores NÃO veem nem conseguem editar este link — só o botão "Atualizar agora".
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaQGrQ3oCX3AXj0LiHcfMbKSBANM8BD2bpoICo5jbPmJZlKdI9y9_wzLmWHzDhyxCAgR88WxcnBrbb/pub?gid=1612982622&single=true&output=csv";
+// -----------------------------------------------------------------------
+
 const lanesEl = document.getElementById('lanes');
 const metaInput = document.getElementById('metaInput');
 const dataInput = document.getElementById('dataInput');
@@ -476,11 +454,13 @@ dataInput.value = hoje.toLocaleDateString('pt-BR');
 nomes.forEach((nome, i) => {
   const lane = document.createElement('div');
   lane.className = 'lane';
+  lane.id = 'lane-' + i;
   lane.innerHTML = `
     <div class="lane-top">
       <div class="name-wrap">
         <span class="medal" id="medal-${i}"></span>
         <input class="name" id="name-${i}" value="${nome}">
+        <span class="neg-badge" id="negcount-${i}"></span>
         <span class="streak-badge" id="streak-${i}"></span>
       </div>
       <div class="stats">
@@ -663,10 +643,8 @@ function applySharedState(state){
 }
 
 // ---------- Fonte automática: lê direto do Google Sheets publicado (CSV), sem digitação dupla ----------
+// O link fica só no código (CSV_URL acima) — os colaboradores não veem caixa nem botão pra mexer nisso.
 let autoSourceUrl = null;
-const sourcePanel = document.getElementById('sourcePanel');
-const sourceStatus = document.getElementById('sourceStatus');
-const csvUrlInput = document.getElementById('csvUrlInput');
 
 function parseCSV(text){
   const rows = [];
@@ -695,6 +673,14 @@ function setValuesReadOnly(readOnly){
   });
 }
 
+// Converte número no formato brasileiro ("1.545,00") para float (1545.00)
+function parseBRNumber(raw){
+  if (!raw) return 0;
+  const cleaned = String(raw).trim().replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
 async function fetchFromSheet(url){
   const bust = url.includes('?') ? '&' : '?';
   const res = await fetch(url + bust + '_t=' + Date.now());
@@ -702,64 +688,68 @@ async function fetchFromSheet(url){
   const text = await res.text();
   const rows = parseCSV(text);
   const headerIdx = rows.findIndex(r => r.some(c => c.trim() === 'Colaborador'));
-  if (headerIdx === -1) throw new Error('Não achei a coluna "Colaborador" no CSV. Confirme se publicou a aba "Ranking do Dia".');
+  if (headerIdx === -1) throw new Error('Não achei a coluna "Colaborador" no CSV. Confirme se publicou a aba "Resumo por Operador".');
   const header = rows[headerIdx];
-  const valIdx = header.findIndex(c => c.toLowerCase().includes('recebido'));
-  if (valIdx === -1) throw new Error('Não achei a coluna "Recebido Hoje" no CSV.');
-  const values = [];
-  for (let k = 0; k < nomes.length; k++){
-    const r = rows[headerIdx + 1 + k];
-    const raw = r ? (r[valIdx] || '0') : '0';
-    values.push(parseFloat(raw.replace(',', '.')) || 0);
+  const nameIdx = header.findIndex(c => c.trim() === 'Colaborador');
+  const valIdx = header.findIndex(c => c.toLowerCase().includes('negociado'));
+  if (valIdx === -1) throw new Error('Não achei a coluna "Total Negociado" no CSV.');
+  const negIdx = header.findIndex(c => c.toLowerCase().includes('qtde') && c.toLowerCase().includes('negocia'));
+
+  // Mapeia por NOME (não por posição), pra não misturar colaboradores se a ordem do CSV mudar
+  const dataByName = {};
+  for (let r = headerIdx + 1; r < rows.length; r++){
+    const row = rows[r];
+    if (!row || !row[nameIdx]) continue;
+    const name = row[nameIdx].trim();
+    if (!name) continue;
+    const val = parseBRNumber(row[valIdx]);
+    let neg = 0;
+    if (negIdx !== -1){
+      neg = parseInt(String(row[negIdx] || '0').replace(/[^0-9-]/g, ''), 10) || 0;
+    }
+    dataByName[name] = { val, neg };
   }
-  return values;
+
+  const values = [], negs = [];
+  nomes.forEach(n => {
+    const d = dataByName[n];
+    values.push(d ? d.val : 0);
+    negs.push(d ? d.neg : 0);
+  });
+  return { values, negs };
 }
 
 async function syncFromSheet(){
   if (!autoSourceUrl) return;
   try{
-    const values = await fetchFromSheet(autoSourceUrl);
+    const { values, negs } = await fetchFromSheet(autoSourceUrl);
     values.forEach((v, i) => {
       document.getElementById('val-'+i).value = v;
     });
+    negs.forEach((n, i) => {
+      const el = document.getElementById('negcount-'+i);
+      if (el){
+        if (n > 0){
+          el.textContent = n + (n === 1 ? ' negociação' : ' negociações');
+          el.classList.add('show');
+        } else {
+          el.classList.remove('show');
+        }
+      }
+    });
     recalc();
-    sourceStatus.textContent = '🟢 Fonte automática ativa — última leitura: ' + new Date().toLocaleTimeString('pt-BR').slice(0,5);
-    sourcePanel.classList.add('auto');
+    setSyncStatus(true, 'atualizado — última leitura: ' + new Date().toLocaleTimeString('pt-BR').slice(0,5));
   }catch(e){
-    sourceStatus.textContent = '🔴 Não consegui ler a planilha (' + e.message + '). Confira o link ou volte ao modo manual.';
-    sourcePanel.classList.remove('auto');
+    setSyncStatus(false, 'não consegui ler a planilha (' + e.message + ')');
   }
 }
 
-async function activateAutoSource(url, persist){
+async function activateAutoSource(url){
   autoSourceUrl = url;
   setValuesReadOnly(true);
-  sourceStatus.textContent = '🟡 Conectando com a planilha…';
-  if (persist && storageAvailable){
-    try{ await window.storage.set('csvUrl', url, true); }catch(e){}
-  }
+  setSyncStatus(true, 'conectando com a planilha…');
   await syncFromSheet();
 }
-
-function deactivateAutoSource(persist){
-  autoSourceUrl = null;
-  setValuesReadOnly(false);
-  sourcePanel.classList.remove('auto');
-  sourceStatus.textContent = '📋 Modo manual — cada um digita o próprio valor aqui no placar.';
-  csvUrlInput.value = '';
-  if (persist && storageAvailable){
-    try{ window.storage.delete('csvUrl', true); }catch(e){}
-  }
-}
-
-document.getElementById('saveSourceBtn').addEventListener('click', () => {
-  const url = csvUrlInput.value.trim();
-  if (!url){ alert('Cole o link CSV publicado da planilha primeiro.'); return; }
-  activateAutoSource(url, true);
-});
-document.getElementById('clearSourceBtn').addEventListener('click', () => {
-  deactivateAutoSource(true);
-});
 
 const saveTimers = {};
 function debouncedPushValue(i, val){
@@ -808,7 +798,7 @@ async function loadHistory(){
 }
 
 function computeStreaksAndChampion(history, meta){
-  // history: [{date, values:[8 numeros]}], ordenado do mais antigo pro mais novo
+  // history: [{date, values:[7 numeros]}], ordenado do mais antigo pro mais novo
   const streaks = nomes.map(()=>0);
   const totals7 = nomes.map(()=>0);
   nomes.forEach((_, i) => {
@@ -958,6 +948,10 @@ function recalc(){
     const pos = posOf[i];
     medal.textContent = val > 0 ? (pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : '') : '';
 
+    // Reordena a raia na tela pra refletir quem está na frente de verdade
+    const laneEl = document.getElementById('lane-'+i);
+    if (laneEl) laneEl.style.order = pos;
+
     // Confete ao bater a meta (dispara uma vez por virada de estado)
     if (pct >= 1 && !prevDone[i]){
       launchConfetti(45);
@@ -965,9 +959,9 @@ function recalc(){
     prevDone[i] = pct >= 1;
   });
 
-  document.getElementById('sumBatidos').textContent = batidos + '/8';
+  document.getElementById('sumBatidos').textContent = batidos + '/' + nomes.length;
   document.getElementById('sumTotal').textContent = fmt(totalRecebido);
-  const teamGoal = meta * 8;
+  const teamGoal = meta * nomes.length;
   const teamPct = teamGoal > 0 ? totalRecebido / teamGoal : 0;
   document.getElementById('sumPct').textContent = Math.round(teamPct*100) + '%';
 
@@ -1019,14 +1013,8 @@ document.getElementById('syncNowBtn').addEventListener('click', async () => {
 });
 
 async function initialSync(){
-  if (storageAvailable){
-    try{
-      const saved = await window.storage.get('csvUrl', true);
-      if (saved && saved.value){
-        csvUrlInput.value = saved.value;
-        await activateAutoSource(saved.value, false);
-      }
-    }catch(e){}
+  if (CSV_URL && CSV_URL.startsWith('http')){
+    await activateAutoSource(CSV_URL);
   }
   const state = await pullSharedState();
   applySharedState(state);
