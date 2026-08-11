@@ -470,7 +470,8 @@ const nomes = ["Alexandre","Kalissa","Maria","Nayara","Yara","Ivoneide","Joao Pe
 // Cole aqui o link CSV publicado da aba "Resumo por Operador" do Painel Central.
 // Os colaboradores NÃO veem nem conseguem editar este link — só o botão "Atualizar agora".
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaQGrQ3oCX3AXj0LiHcfMbKSBANM8BD2bpoICo5jbPmJZlKdI9y9_wzLmWHzDhyxCAgR88WxcnBrbb/pub?gid=1612982622&single=true&output=csv";
-// Cole aqui o link CSV publicado da aba "Histórico Consolidado" do Painel Central, quando tiver.
+// Cole aqui o link CSV publicado da aba "Histórico Consolidado" do Painel Central.
+// Publique especificamente essa aba (Arquivo > Compartilhar > Publicar na Web > CSV).
 // Deixe como "" (vazio) que o seletor "Ver dia" fica com só a opção "Hoje", sem dar erro.
 const CSV_URL_HIST = "";
 // -----------------------------------------------------------------------
@@ -809,7 +810,7 @@ async function fetchHistCSV(){
   const header = rows[headerIdx];
   const dataIdx = header.findIndex(c => c.trim() === 'Data');
   const colabIdx = header.findIndex(c => c.trim() === 'Colaborador');
-  const recIdx = header.findIndex(c => c.toLowerCase().includes('recebido'));
+  const negIdx = header.findIndex(c => c.toLowerCase().includes('negociado'));
   const out = [];
   for (let r = headerIdx + 1; r < rows.length; r++){
     const row = rows[r];
@@ -817,7 +818,7 @@ async function fetchHistCSV(){
     out.push({
       data: row[dataIdx].trim(),
       colaborador: row[colabIdx].trim(),
-      recebido: parseBRNumber(row[recIdx])
+      negociado: parseBRNumber(row[negIdx])
     });
   }
   return out;
@@ -852,7 +853,7 @@ function showHistoricalDay(dataLabel){
   setValuesReadOnly(true);
   const rowsForDay = (histRowsCache || []).filter(r => r.data === dataLabel);
   const byName = {};
-  rowsForDay.forEach(r => { byName[r.colaborador] = r.recebido; });
+  rowsForDay.forEach(r => { byName[r.colaborador] = r.negociado; });
   nomes.forEach((n, i) => {
     document.getElementById('val-'+i).value = byName[n] || 0;
     const el = document.getElementById('negcount-'+i);
