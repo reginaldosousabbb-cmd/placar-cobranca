@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Alçada de Desconto — Cobrança</title>
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:#141f2b;
+    --panel-2:#182531;
+    --border:#233242;
+    --text:#e7edf3;
+    --muted:#8ea0b3;
+    --accent:#2f8f6e;
+    --accent-dark:#1f6b52;
+    --warn:#d97757;
+    --danger:#c0563f;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+  header{margin-bottom:24px;}
+  .brand{
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:700;
+    margin-bottom:6px;
+  }
+  h1{font-size:22px;margin:0 0 6px;font-weight:700;}
+  .subtitle{color:var(--muted);font-size:13px;line-height:1.5;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:14px;
+    margin:0 0 4px;
+    color:var(--text);
+  }
+  .card p.hint{
+    color:var(--muted);
+    font-size:12.5px;
+    margin:0 0 16px;
+  }
+
+  #faturas{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+  .fatura-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+  }
+  .fatura-row .idx{
+    width:22px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:600;
+  }
+  .fatura-row input[type="number"]{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+    -moz-appearance: textfield;
+  }
+  .fatura-row input[type="number"]::-webkit-outer-spin-button,
+  .fatura-row input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance:none;margin:0;
+  }
+  .fatura-row .suffix{color:var(--muted);font-size:12.5px;white-space:nowrap;}
+  .fatura-row .tag{
+    font-size:11px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+    min-width:64px;
+    text-align:center;
+  }
+  .fatura-row .remove{
+    background:none;
+    border:none;
+    color:var(--muted);
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    padding:4px 6px;
+    border-radius:6px;
+  }
+  .fatura-row .remove:hover{color:var(--danger);background:rgba(192,86,63,.12);}
+
+  .tag.t0{background:rgba(142,160,179,.15);color:var(--muted);}
+  .tag.t20{background:rgba(47,143,110,.18);color:#57c79a;}
+  .tag.t30{background:rgba(47,143,110,.28);color:#57c79a;}
+  .tag.t60{background:rgba(217,119,87,.2);color:#e79f7f;}
+  .tag.t70{background:rgba(192,86,63,.22);color:#e2836a;}
+
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  #add-fatura{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px dashed var(--border);
+    background:transparent;
+    color:var(--muted);
+    font-size:13.5px;
+    font-weight:600;
+    transition:.15s;
+  }
+  #add-fatura:hover{border-color:var(--accent);color:var(--accent);}
+
+  #calcular{
+    width:100%;
+    margin-top:16px;
+    padding:13px;
+    border-radius:8px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-size:14.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+  }
+  #calcular:hover{background:var(--accent-dark);}
+
+  .resultado{
+    display:none;
+    text-align:center;
+    padding:22px 20px;
+  }
+  .resultado.show{display:block;}
+  .resultado .label{
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    margin-bottom:6px;
+  }
+  .resultado .valor{
+    font-size:42px;
+    font-weight:800;
+    color:var(--accent);
+    line-height:1;
+  }
+  .resultado .detalhe{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;
+    color:var(--muted);
+    font-weight:600;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    padding:6px 8px;
+    border-bottom:1px solid var(--border);
+  }
+  tbody td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--border);
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody td:last-child{text-align:right;font-weight:700;}
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:11.5px;
+    margin-top:24px;
+    line-height:1.6;
+  }
+
+  .empty-msg{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    padding:8px 0 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">HUBMAIS · Cobrança</div>
+    <h1>Calculadora de alçada de desconto</h1>
+    <div class="subtitle">Baseado no procedimento de aplicação de descontos em cobrança. Informe os dias de atraso de cada fatura do contrato para calcular a alçada máxima.</div>
+  </header>
+
+  <div class="card">
+    <h2>Faturas do contrato</h2>
+    <p class="hint">Adicione uma linha para cada fatura em aberto e informe os dias de atraso.</p>
+    <div id="faturas"></div>
+    <button id="add-fatura" type="button">+ Adicionar fatura</button>
+    <button id="calcular" type="button">Calcular alçada</button>
+  </div>
+
+  <div class="card resultado" id="resultado">
+    <div class="label">Alçada máxima do contrato</div>
+    <div class="valor" id="valor-final">—</div>
+    <div class="detalhe" id="detalhe-final"></div>
+  </div>
+
+  <div class="card">
+    <h2>Tabela de referência</h2>
+    <table>
+      <thead>
+        <tr><th>Dias de atraso</th><th>Alçada máxima</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>10 a 20 dias</td><td>20%</td></tr>
+        <tr><td>21 a 30 dias</td><td>30%</td></tr>
+        <tr><td>31 a 40 dias</td><td>60%</td></tr>
+        <tr><td>A partir de 41 dias</td><td>70%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Preencha as faturas e clique em "Calcular alçada" para ver o resultado.<br>
+    Uso interno · consulte a supervisão em casos não previstos no procedimento.
+  </footer>
+</div>
+
+<script>
+let count = 0;
+
+function faixaDesconto(dias){
+  if (dias >= 41) return 70;
+  if (dias >= 31) return 60;
+  if (dias >= 21) return 30;
+  if (dias >= 10) return 20;
+  return 0;
+}
+
+function tagClass(pct){
+  if (pct === 70) return 't70';
+  if (pct === 60) return 't60';
+  if (pct === 30) return 't30';
+  if (pct === 20) return 't20';
+  return 't0';
+}
+
+function addFatura(){
+  count++;
+  const id = count;
+  const row = document.createElement('div');
+  row.className = 'fatura-row';
+  row.dataset.id = id;
+  row.innerHTML = `
+    <span class="idx">${document.querySelectorAll('.fatura-row').length + 1}</span>
+    <input type="number" min="0" step="1" placeholder="Dias de atraso" inputmode="numeric">
+    <span class="suffix">dias</span>
+    <span class="tag t0">—</span>
+    <button class="remove" type="button" title="Remover fatura">✕</button>
+  `;
+  document.getElementById('faturas').appendChild(row);
+
+  const input = row.querySelector('input');
+  const tag = row.querySelector('.tag');
+  const removeBtn = row.querySelector('.remove');
+
+  input.addEventListener('input', () => {
+    const dias = parseInt(input.value, 10);
+    if (isNaN(dias) || dias < 0){
+      tag.textContent = '—';
+      tag.className = 'tag t0';
+      return;
+    }
+    const pct = faixaDesconto(dias);
+    tag.textContent = pct > 0 ? pct + '%' : 'sem alçada';
+    tag.className = 'tag ' + tagClass(pct);
+  });
+
+  removeBtn.addEventListener('click', () => {
+    row.remove();
+    renumerar();
+  });
+
+  input.focus();
+}
+
+function renumerar(){
+  document.querySelectorAll('.fatura-row').forEach((row, i) => {
+    row.querySelector('.idx').textContent = i + 1;
+  });
+}
+
+function calcular(){
+  const rows = document.querySelectorAll('.fatura-row');
+  const dadosValidos = [];
+
+  rows.forEach(row => {
+    const input = row.querySelector('input');
+    const dias = parseInt(input.value, 10);
+    if (!isNaN(dias) && dias >= 0){
+      dadosValidos.push(dias);
+    }
+  });
+
+  const resultado = document.getElementById('resultado');
+  const valorFinal = document.getElementById('valor-final');
+  const detalheFinal = document.getElementById('detalhe-final');
+
+  if (dadosValidos.length === 0){
+    resultado.classList.remove('show');
+    alert('Informe os dias de atraso de pelo menos uma fatura.');
+    return;
+  }
+
+  const percentuais = dadosValidos.map(faixaDesconto);
+  const soma = percentuais.reduce((a, b) => a + b, 0);
+  const media = soma / percentuais.length;
+
+  valorFinal.textContent = media.toFixed(1).replace(/\.0$/, '') + '%';
+  detalheFinal.textContent = `Média entre ${dadosValidos.length} fatura(s): ${percentuais.map(p => p + '%').join(' + ')} ÷ ${dadosValidos.length}`;
+  resultado.classList.add('show');
+  resultado.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+document.getElementById('add-fatura').addEventListener('click', addFatura);
+document.getElementById('calcular').addEventListener('click', calcular);
+
+// inicia com uma fatura em branco
+addFatura();
+</script>
+</body>
+</html>
