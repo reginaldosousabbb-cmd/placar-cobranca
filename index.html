@@ -79,6 +79,13 @@
     text-align:center;
   }
   .params input:focus{outline:2px solid var(--gold);}
+  .params input[readonly]{cursor:default;opacity:0.9;}
+  .params input[readonly]::-webkit-outer-spin-button,
+  .params input[readonly]::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .params input[type=number][readonly]{-moz-appearance:textfield;}
   .params select{
     background:var(--panel-2);
     border:1px solid rgba(244,241,232,0.25);
@@ -90,6 +97,7 @@
     font-size:13px;
   }
   .params select:focus{outline:2px solid var(--gold);}
+  .params input[type=date]{color-scheme:dark;}
   .hist-banner{
     display:none;
     margin-top:10px;
@@ -219,12 +227,12 @@
     background:transparent;
     border:none;
     color:var(--cream);
-    border-bottom:1px dashed rgba(244,241,232,0.3);
     padding:2px 0;
     min-width:60px;
     max-width:130px;
+    cursor:default;
   }
-  .name:focus{outline:none;border-bottom:1px solid var(--gold);}
+  .name:focus{outline:none;}
   .streak-badge{
     font-size:10px;
     font-weight:800;
@@ -266,6 +274,13 @@
     font-family:'Inter',sans-serif;
   }
   .valinput:focus{outline:2px solid var(--gold);}
+  .valinput[readonly]{cursor:default;}
+  .valinput[readonly]::-webkit-outer-spin-button,
+  .valinput[readonly]::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .valinput[type=number][readonly]{-moz-appearance:textfield;}
   .pct{
     font-family:'Bebas Neue',sans-serif;
     font-size:20px;
@@ -410,16 +425,15 @@
 <div class="wrap" id="captureArea">
 
   <div class="header">
-    <div class="eyebrow">Placar diário · equipe de cobrança</div>
+    <div class="eyebrow">Placar diário · turno da tarde</div>
     <h1>CORRIDA DA META</h1>
     <div class="params">
       <label>📅 <input type="text" id="dataInput" value=""></label>
-      <label>🎯 Meta/pessoa R$ <input type="number" id="metaInput" value="1923" step="1"></label>
+      <label>🎯 Meta/pessoa R$ <input type="number" id="metaInput" value="1923" step="1" readonly></label>
       <label>🕐 Ver dia
-        <select id="dateSelect">
-          <option value="hoje">Hoje (ao vivo)</option>
-        </select>
+        <input type="date" id="dateSelect">
       </label>
+      <button class="sync-btn" id="backLiveBtn" style="display:none;">🔴 Voltar ao vivo</button>
     </div>
     <div class="sync-banner">
       <span class="sync-dot" id="syncDot"></span>
@@ -493,13 +507,13 @@ nomes.forEach((nome, i) => {
     <div class="lane-top">
       <div class="name-wrap">
         <span class="medal" id="medal-${i}"></span>
-        <input class="name" id="name-${i}" value="${nome}">
+        <input class="name" id="name-${i}" value="${nome}" readonly>
         <span class="neg-badge" id="negcount-${i}"></span>
         <span class="streak-badge" id="streak-${i}"></span>
       </div>
       <div class="stats">
         <span style="font-size:12px;color:var(--muted);">R$</span>
-        <input class="valinput" id="val-${i}" type="number" value="0" step="10">
+        <input class="valinput" id="val-${i}" type="number" value="0" step="10" readonly>
         <span class="pct" id="pct-${i}">0%</span>
       </div>
     </div>
@@ -831,24 +845,18 @@ async function populateDateSelect(){
     histRowsCache = [];
   }
   if (!histRowsCache || histRowsCache.length === 0) return;
-  // datas únicas, na ordem em que aparecem, mais recentes por último — invertemos pra mostrar mais recente primeiro
-  const seen = new Set();
-  const datas = [];
-  histRowsCache.forEach(r => {
-    if (!seen.has(r.data)){ seen.add(r.data); datas.push(r.data); }
-  });
-  datas.reverse();
-  datas.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d;
-    opt.textContent = d;
-    dateSelect.appendChild(opt);
-  });
+  // define o intervalo do calendário com base nas datas que realmente existem no histórico
+  const datas = histRowsCache.map(r => r.data).filter(Boolean).sort();
+  if (datas.length){
+    dateSelect.min = datas[0];
+    dateSelect.max = datas[datas.length - 1];
+  }
 }
 
 function showHistoricalDay(dataLabel){
   viewingHistory = true;
   histBanner.classList.add('show');
+  document.getElementById('backLiveBtn').style.display = 'inline-block';
   histBanner.textContent = '📅 Vendo o dia ' + dataLabel + ' (histórico) — os valores não são editáveis aqui.';
   setValuesReadOnly(true);
   const rowsForDay = (histRowsCache || []).filter(r => r.data === dataLabel);
@@ -866,6 +874,7 @@ function showHistoricalDay(dataLabel){
 function backToLive(){
   viewingHistory = false;
   histBanner.classList.remove('show');
+  document.getElementById('backLiveBtn').style.display = 'none';
   if (autoSourceUrl){
     setValuesReadOnly(true);
     syncFromSheet();
@@ -875,11 +884,15 @@ function backToLive(){
 }
 
 dateSelect.addEventListener('change', () => {
-  if (dateSelect.value === 'hoje'){
+  if (!dateSelect.value){
     backToLive();
   } else {
     showHistoricalDay(dateSelect.value);
   }
+});
+document.getElementById('backLiveBtn').addEventListener('click', () => {
+  dateSelect.value = '';
+  backToLive();
 });
 
 const saveTimers = {};
