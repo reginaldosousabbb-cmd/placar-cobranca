@@ -446,7 +446,7 @@
   <div class="thermo-card">
     <div class="thermo-top">
       <span class="thermo-label">🌡️ Termômetro da Equipe</span>
-      <span class="thermo-values" id="thermoValues"><b>R$ 0</b> de R$ 13.461</span>
+      <span class="thermo-values" id="thermoValues"><b>R$ 0</b> de R$ 21.153</span>
     </div>
     <div class="thermo-track">
       <div class="thermo-fill" id="thermoFill" style="width:0%;"></div>
@@ -455,7 +455,7 @@
   </div>
 
   <div class="summary">
-    <div class="metric"><div class="num" id="sumBatidos">0/7</div><div class="lbl">bateram a meta</div></div>
+    <div class="metric"><div class="num" id="sumBatidos">0/11</div><div class="lbl">bateram a meta</div></div>
     <div class="metric"><div class="num" id="sumTotal">R$ 0</div><div class="lbl">negociado pela equipe</div></div>
     <div class="metric"><div class="num" id="sumPct">0%</div><div class="lbl">da meta da equipe</div></div>
   </div>
@@ -478,7 +478,7 @@
 </div>
 
 <script>
-const nomes = ["Alexandre","Kalissa","Maria","Nayara","Yara","Ivoneide","Joao Pedro"];
+const nomes = ["Alexandre","Kalissa","Maria","Nayara","Yara","Ivoneide","Joao Pedro","Gustavo","Camila","Rosilene","Samara"];
 
 // ---- CONFIGURAÇÃO DO ADMIN (só quem edita este arquivo mexe aqui) ----
 // Cole aqui o link CSV publicado da aba "Resumo por Operador" do Painel Central.
@@ -942,7 +942,7 @@ async function loadHistory(){
 }
 
 function computeStreaksAndChampion(history, meta){
-  // history: [{date, values:[7 numeros]}], ordenado do mais antigo pro mais novo
+  // history: [{date, values:[um número por colaborador]}], ordenado do mais antigo pro mais novo
   const streaks = nomes.map(()=>0);
   const totals7 = nomes.map(()=>0);
   nomes.forEach((_, i) => {
@@ -973,7 +973,7 @@ async function renderHistory(){
     let html = '<table class="history-table"><tr><th>Data</th>' + nomes.map(n=>`<th>${n.split(' ')[0]}</th>`).join('') + '</tr>';
     last7.forEach(day => {
       html += '<tr><td>' + day.date.split('-').reverse().join('/') + '</td>' +
-        day.values.map(v => `<td>${(v||0).toLocaleString('pt-BR')}</td>`).join('') + '</tr>';
+        nomes.map((_, i) => `<td>${(day.values[i]||0).toLocaleString('pt-BR')}</td>`).join('') + '</tr>';
     });
     html += '</table>';
     body.innerHTML = html;
