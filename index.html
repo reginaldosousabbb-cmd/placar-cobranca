@@ -812,6 +812,19 @@ let histRowsCache = null; // [{data, colaborador, negociado, recebido, meta, pct
 let liveInterval = null;
 let viewingHistory = false;
 
+// Aceita data como 2026-10-13, 13/10/2026 ou 13/10/26 e devolve sempre 2026-10-13
+function normDate(raw){
+  const s = String(raw || '').trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m){
+    const y = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  }
+  return s;
+}
+
 async function fetchHistCSV(){
   if (!CSV_URL_HIST || !CSV_URL_HIST.startsWith('http')) return [];
   const bust = CSV_URL_HIST.includes('?') ? '&' : '?';
@@ -830,7 +843,7 @@ async function fetchHistCSV(){
     const row = rows[r];
     if (!row || !row[dataIdx] || !row[colabIdx]) continue;
     out.push({
-      data: row[dataIdx].trim(),
+      data: normDate(row[dataIdx]),
       colaborador: row[colabIdx].trim(),
       negociado: parseBRNumber(row[negIdx])
     });
